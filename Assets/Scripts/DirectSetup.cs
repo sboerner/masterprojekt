@@ -54,9 +54,9 @@ public class DirectSetup : MonoBehaviour
             GUILayout.Label("Cloud Project ID: " + Application.cloudProjectId);
 
         if (m_MatchJoined)
-            GUILayout.Label("Match joined '" + m_MatchName + "' on Matchmaker server");
+            GUILayout.Label("Match joined " + m_MatchName + " on Matchmaker server");
         else if (m_MatchCreated)
-            GUILayout.Label("Match '" + m_MatchName + "' created on Matchmaker server");
+            GUILayout.Label("Match " + m_MatchName + " created on Matchmaker server");
 
         GUILayout.Label("Connection Established: " + m_ConnectionEstablished);
 
@@ -168,7 +168,7 @@ public class DirectSetup : MonoBehaviour
         }
     }
 
-    // When we've joined a match we connect to the server/host
+    // When we"ve joined a match we connect to the server/host
     public virtual void OnMatchJoined(bool success, string extendedInfo, MatchInfo matchInfo)
     {
         if (success)

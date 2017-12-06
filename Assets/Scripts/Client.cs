@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
@@ -17,6 +18,7 @@ public class Client : MonoBehaviour {
 	private int unreliableChannel;
 
     private int connectionId;
+    private int ourClientId;
 
     private float connectionTime;
 	private bool isConnected = false;
@@ -61,11 +63,11 @@ public class Client : MonoBehaviour {
     {
         if (!isConnected)
         {
-            GameObject.Find("Status").GetComponent<Text>().text = "false";
+            //GameObject.Find("Status").GetComponent<Text>().text = "false";
             return;
         }
 
-        GameObject.Find("Status").GetComponent<Text>().text = "true";
+        //GameObject.Find("Status").GetComponent<Text>().text = "true";
 
         //https://docs.unity3d.com/Manual/UNetUsingTransport.html
         int recHostId;
@@ -78,15 +80,61 @@ public class Client : MonoBehaviour {
         NetworkEventType recData = NetworkTransport.Receive(out recHostId, out connectionId, out channelId, recBuffer, bufferSize, out dataSize, out error);
         switch (recData)
         {
-            case NetworkEventType.Nothing:         //1
-                break;
-            case NetworkEventType.ConnectEvent:    //2
-                break;
+            //case NetworkEventType.Nothing:         //1
+            //    break;
+            //case NetworkEventType.ConnectEvent:    //2
+            //    break;
             case NetworkEventType.DataEvent:       //3
+                string msg = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
+                Debug.Log("Receiving: " + msg);
+
+                string[] splitData = msg.Split('|');
+
+                //Switch für PIPE
+                switch (splitData[0])
+                {
+                    case "ASKNAME":
+                        OnAskName(splitData);
+                        break;
+                    case "CNN":
+                        break;
+                    case "DC":
+                        break;
+                    default:
+                        Debug.Log("Invalid message: " + msg);
+                        break;
+                }
+
                 break;
-            case NetworkEventType.DisconnectEvent: //4
-                break;
+            //case NetworkEventType.DisconnectEvent: //4
+            //    break;
         }
     }
 
+    private void OnAskName(string[] splitData)
+    {
+        //Wenn in Pipe ASKNAME steht
+        ourClientId = int.Parse(splitData[1]);
+
+        //Send our name to the server
+        Send("NAMEIS|" + playerName, reliableChannel);
+
+        //Create all the other players
+        for (int i = 2; i < splitData.Length - 1; i++){
+            string[] d = splitData[i].Split('%');
+            SpawnPlayer(int.Parse(d[1]), d[0]);
+        }
+    }
+
+    private void SpawnPlayer(int cnnId, string playerName)
+    {
+
+    }
+
+    private void Send(string message, int channelId)
+    {
+        Debug.Log("Sending: " + message);
+        byte[] msg = Encoding.Unicode.GetBytes(message);
+        NetworkTransport.Send(hostId, connectionId, channelId, msg, message.Length * sizeof(char), out error);
+    }
 }
