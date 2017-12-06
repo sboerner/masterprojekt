@@ -50,7 +50,8 @@ public class Client : MonoBehaviour {
 
         //null accepts connection from everybody
         hostId = NetworkTransport.AddHost(topo,0);
-        connectionId = NetworkTransport.Connect(hostId,"127.0.0.1",port,0, out error);
+        connectionId = NetworkTransport.Connect(hostId, "127.0.0.1", port, 0, out error);
+        //connectionId = NetworkTransport.Connect(hostId, "141.57.58.32", port, 0, out error);
 
         connectionTime = Time.time;
         isConnected = true;
@@ -60,8 +61,11 @@ public class Client : MonoBehaviour {
     {
         if (!isConnected)
         {
+            GameObject.Find("Status").GetComponent<Text>().text = "false";
             return;
         }
+
+        GameObject.Find("Status").GetComponent<Text>().text = "true";
 
         //https://docs.unity3d.com/Manual/UNetUsingTransport.html
         int recHostId;

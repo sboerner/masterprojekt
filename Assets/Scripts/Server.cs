@@ -68,7 +68,7 @@ public class Server : MonoBehaviour {
                 break;
             case NetworkEventType.DataEvent:       //3
                 string msg = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
-                Debug.Log("Player " + connectionId + " has sent");
+                Debug.Log("Player " + connectionId + " has sent: " + msg);
                 break;
             case NetworkEventType.DisconnectEvent: //4
                 Debug.Log("Player " + connectionId + " has disconnected");
