@@ -5,6 +5,13 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
+public class Player
+{
+    public string playerName;
+    public GameObject avatar;
+    public int connectionId;
+}
+
 public class Client : MonoBehaviour {
 	
 	private const int MAX_CONNECTION = 100;
@@ -26,6 +33,8 @@ public class Client : MonoBehaviour {
 	private byte error;
 
     private string playerName;
+    public GameObject playerPrefab;
+    public List<Player> players = new List<Player>();
 
     public void Connect()
     {
@@ -97,6 +106,7 @@ public class Client : MonoBehaviour {
                         OnAskName(splitData);
                         break;
                     case "CNN":
+                        SpawnPlayer(int.Parse(splitData[2]), splitData[1]);
                         break;
                     case "DC":
                         break;
@@ -128,7 +138,27 @@ public class Client : MonoBehaviour {
 
     private void SpawnPlayer(int cnnId, string playerName)
     {
+        GameObject go = Instantiate(playerPrefab) as GameObject;
+        //is this ours?
+        if (cnnId == ourClientId)
+        {
+            //Add mobility through PlayerMotor script
+            go.AddComponent<PlayerMotor>();
 
+            //deactivate connection screen
+            GameObject.Find("Canvas").SetActive(false);
+
+            //
+            isStarted = true;
+        }
+
+        //eigene Klasse
+        Player p = new Player();
+        p.avatar = go;
+        p.playerName = playerName;
+        p.connectionId = cnnId;
+        p.avatar.GetComponentInChildren<TextMesh>().text = playerName;
+        players.Add(p);
     }
 
     private void Send(string message, int channelId)
