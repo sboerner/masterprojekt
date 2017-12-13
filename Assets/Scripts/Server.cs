@@ -8,6 +8,7 @@ public class ServerClient
 {
     public int connectionId;
     public string playerName;
+    public Vector3 position;
 }
 
 public class Server : MonoBehaviour {
@@ -28,6 +29,10 @@ public class Server : MonoBehaviour {
 	private byte error;
 
     private List<ServerClient> clients = new List<ServerClient>();
+
+    private float lastMovementUpdate;
+    //Refreshrate
+    private float movementUpdateRate = 0.05f;
 
 	private void Start()
     {
@@ -86,9 +91,9 @@ public class Server : MonoBehaviour {
                     case "NAMEIS":
                         OnNameIs(connectionId, splitData[1]);
                         break;
-                    case "CNN":
-                        break;
-                    case "DC":
+                    case "MYPOSITION":
+                        //Fehler bin ich ja der Meinung
+                        OnMyPosition(connectionId, float.Parse(splitData[1]), float.Parse(splitData[2]));
                         break;
                     default:
                         Debug.Log("Invalid message: " + msg);
@@ -96,11 +101,27 @@ public class Server : MonoBehaviour {
                 }
 
                 break;
+
             case NetworkEventType.DisconnectEvent: //4
                 Debug.Log("Player " + connectionId + " has disconnected");
+                OnDisconnection(connectionId);
                 break;
         }
 
+        //ASK Player for their position
+        if ((Time.time - lastMovementUpdate) > movementUpdateRate)
+        {
+            lastMovementUpdate = Time.time;
+            //ASK everybody
+            string msgPosition = "ASKPOSITION|";
+            //Send every position to player
+            foreach (ServerClient sc in clients)
+            {
+                msgPosition += sc.connectionId.ToString() + '%' +sc.position.x.ToString()+ '%' +sc.position.y.ToString() + '|';
+            }
+            msgPosition = msgPosition.Trim('|');
+            Send(msgPosition, unreliableChannel, clients);
+        }
     }
 
     private void OnConnection(int cnnId)
@@ -127,6 +148,16 @@ public class Server : MonoBehaviour {
         Send(msg, reliableChannel, cnnId);
     }
 
+    private void OnDisconnection(int cnnId)
+    {
+        //Remove player from client list
+        clients.Remove(clients.Find(x=>x.connectionId==cnnId));
+
+
+        //Tell everyone else that somebody has disconnected
+        Send("DC|" + cnnId, reliableChannel,clients);
+    }
+
     private void OnNameIs(int cnnId, string playerName)
     {
         // Link the name to the connection Id
@@ -134,6 +165,11 @@ public class Server : MonoBehaviour {
 
         //Tell everybody that a new player has connected
         Send("CNN|" + playerName + "|" + cnnId, reliableChannel, clients);
+    }
+
+    private void OnMyPosition(int cnnId, float x, float y)
+    {
+        clients.Find(c => c.connectionId == cnnId).position = new Vector3(x, y, 0);
     }
 
     private void Send(string message, int channelId, int cnnId)

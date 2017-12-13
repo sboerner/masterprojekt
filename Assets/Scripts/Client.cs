@@ -34,7 +34,7 @@ public class Client : MonoBehaviour {
 
     private string playerName;
     public GameObject playerPrefab;
-    public List<Player> players = new List<Player>();
+    public Dictionary<int,Player> players = new Dictionary<int,Player>();
 
     public void Connect()
     {
@@ -61,11 +61,21 @@ public class Client : MonoBehaviour {
 
         //null accepts connection from everybody
         hostId = NetworkTransport.AddHost(topo,0);
-        connectionId = NetworkTransport.Connect(hostId, "127.0.0.1", port, 0, out error);
+        string ip = GameObject.Find("IPInput").GetComponent<InputField>().text;
+        connectionId = NetworkTransport.Connect(hostId, ip, port, 0, out error);
         //connectionId = NetworkTransport.Connect(hostId, "141.57.58.32", port, 0, out error);
 
         connectionTime = Time.time;
+        GameObject.Find("ConnectionHint").GetComponent<Text>().text = ("Could connect to server.");
         isConnected = true;
+    }
+
+    void OnFailedToConnect(NetworkConnectionError error)
+    {
+        Debug.Log("Could not connect to server: " + error);
+        GameObject.Find("ConnectionHint").GetComponent<Text>().text = ("Could not connect to server: " + error);
+        //GameObject.Find("ConnectionHint").SetActive(true);
+        isConnected = false;
     }
 
     private void Update()
@@ -109,6 +119,10 @@ public class Client : MonoBehaviour {
                         SpawnPlayer(int.Parse(splitData[2]), splitData[1]);
                         break;
                     case "DC":
+                        PlayerDisconnected(int.Parse(splitData[1]));
+                        break;
+                    case "ASKPOSITION":
+                        OnAskPosition(splitData);
                         break;
                     default:
                         Debug.Log("Invalid message: " + msg);
@@ -136,6 +150,37 @@ public class Client : MonoBehaviour {
         }
     }
 
+    private void OnAskPosition(string[] data)
+    {
+        //Ask Position erst nachdem der Spieler da ist
+        if (!isStarted)
+        {
+            return;
+        }
+
+
+        //Update every other player except himself
+        for (int i = 1; i < data.Length;i++)
+        {
+            string[] d = data[i].Split('%');
+
+            //Prevent the server from updating us
+            if (ourClientId != int.Parse(d[0]))
+            {
+                Vector3 position = Vector3.zero;
+                position.x = float.Parse(d[1]);
+                position.y = float.Parse(d[2]);
+                players[int.Parse(d[0])].avatar.transform.position = position;
+            }
+
+        }
+
+        //Send our own position
+        Vector3 myPosition = players[ourClientId].avatar.transform.position;
+        string msgMyPosition = "MYPOSITION|"+myPosition.x.ToString()+'|'+myPosition.y.ToString();
+        Send(msgMyPosition, unreliableChannel);
+    }
+
     private void SpawnPlayer(int cnnId, string playerName)
     {
         GameObject go = Instantiate(playerPrefab) as GameObject;
@@ -143,11 +188,10 @@ public class Client : MonoBehaviour {
         if (cnnId == ourClientId)
         {
             //Add mobility through PlayerMotor script
-            go.AddComponent<PlayerMotor>();
+            //go.AddComponent<PlayerMotor>();
 
             //deactivate connection screen
             GameObject.Find("Canvas").SetActive(false);
-
             //
             isStarted = true;
         }
@@ -158,7 +202,13 @@ public class Client : MonoBehaviour {
         p.playerName = playerName;
         p.connectionId = cnnId;
         p.avatar.GetComponentInChildren<TextMesh>().text = playerName;
-        players.Add(p);
+        players.Add(cnnId,p);
+    }
+
+    private void PlayerDisconnected(int cnnId)
+    {
+        Destroy(players[cnnId].avatar);
+        players.Remove(cnnId);
     }
 
     private void Send(string message, int channelId)
