@@ -148,6 +148,12 @@ public class Server : MonoBehaviour {
         Send(msg, reliableChannel, cnnId);
     }
 
+    public void ChangeScene(string sceneName)
+    {
+        NetworkManager.singleton.ServerChangeScene(sceneName);
+        Debug.Log("Level sollte gewechselt sein!");
+    }
+
     private void OnDisconnection(int cnnId)
     {
         //Remove player from client list

@@ -24,6 +24,7 @@ GameObject:
   - component: {fileID: 23221480066118008}
   - component: {fileID: 114045204979420312}
   - component: {fileID: 143357509370504780}
+  - component: {fileID: 114944260404541596}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -183,6 +184,38 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 10
+--- !u!114 &114944260404541596
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1213001551459820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 372142912, guid: dc443db3e92b4983b9738c1131f555cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SceneId:
+    m_Value: 0
+  m_AssetId:
+    i0: 41
+    i1: 110
+    i2: 123
+    i3: 152
+    i4: 147
+    i5: 13
+    i6: 46
+    i7: 132
+    i8: 88
+    i9: 246
+    i10: 237
+    i11: 177
+    i12: 190
+    i13: 3
+    i14: 54
+    i15: 71
+  m_ServerOnly: 0
+  m_LocalPlayerAuthority: 1
 --- !u!135 &135075004217493702
 SphereCollider:
   m_ObjectHideFlags: 1
